@@ -1,0 +1,153 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AssignHub | Teacher Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .teacher-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .teacher-header h1 { margin-bottom: 6px; }
+
+    .teacher-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .teacher-actions button, .review-btn {
+      padding: 10px 14px;
+      border: 0;
+      border-radius: 8px;
+      background: #5545df;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .teacher-panel {
+      background: white;
+      padding: 24px;
+      border-radius: 14px;
+      box-shadow: 0 5px 20px #00000008;
+    }
+
+    .teacher-table-wrap { overflow-x: auto; }
+
+    .teacher-table {
+      width: 100%;
+      min-width: 850px;
+      border-collapse: collapse;
+    }
+
+    .teacher-table th, .teacher-table td {
+      text-align: left;
+      padding: 13px 10px;
+      border-bottom: 1px solid #eceef5;
+      vertical-align: top;
+    }
+
+    .teacher-table th {
+      background: #f7f7fc;
+      color: #555c72;
+    }
+
+    .teacher-table select, .teacher-table textarea {
+      width: 100%;
+      min-width: 130px;
+      padding: 9px;
+      border: 1px solid #d8dbea;
+      border-radius: 7px;
+      font: inherit;
+    }
+
+    .teacher-table textarea {
+      min-width: 180px;
+      min-height: 65px;
+      resize: vertical;
+    }
+
+    .teacher-message { margin-top: 16px; }
+    .muted { color: #687087; }
+  </style>
+</head>
+<body>
+  <main class="main" style="max-width: 1500px; margin: auto; width: 100%;">
+    <header class="teacher-header">
+      <div>
+        <p class="eyebrow">ASSIGNHUB · TEACHER WORKSPACE</p>
+        <h1>Teacher Dashboard</h1>
+        <p class="muted">Review student assignments and provide feedback.</p>
+        <p id="teacherIdentity" class="muted">Checking teacher account...</p>
+      </div>
+
+      <div class="teacher-actions">
+        <button id="refreshButton" type="button">Refresh</button>
+        <button id="logoutButton" type="button">Logout</button>
+      </div>
+    </header>
+
+    <section class="stats">
+      <article class="stat-card">
+        <div class="stat-icon purple">▤</div>
+        <p>Total Submissions</p>
+        <h2 id="totalCount">0</h2>
+      </article>
+
+      <article class="stat-card">
+        <div class="stat-icon orange">◷</div>
+        <p>Pending Review</p>
+        <h2 id="pendingCount">0</h2>
+      </article>
+
+      <article class="stat-card">
+        <div class="stat-icon green">✓</div>
+        <p>Approved</p>
+        <h2 id="approvedCount">0</h2>
+      </article>
+    </section>
+
+    <section class="teacher-panel">
+      <h2>Student Submissions</h2>
+      <p class="muted">
+        Select a status, enter feedback, and save your review.
+      </p>
+
+      <div class="teacher-table-wrap">
+        <table class="teacher-table">
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Subject</th>
+              <th>Assignment</th>
+              <th>File</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Teacher Remark</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="teacherSubmissionList">
+            <tr><td colspan="8">Loading submissions...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p id="teacherMessage" class="teacher-message" role="status" aria-live="polite"></p>
+    </section>
+
+    <footer>AssignHub · Cloud Computing Mini Project</footer>
+  </main>
+
+  <script type="module" src="teacher.js"></script>
+</body>
+</html>

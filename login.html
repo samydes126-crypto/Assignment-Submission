@@ -1,0 +1,227 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AssignHub | Login</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f4f5fb;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 420px;
+      padding: 30px;
+      border-radius: 16px;
+      background: white;
+      box-shadow: 0 8px 30px #00000012;
+    }
+
+    h1 { color: #5545df; margin-bottom: 8px; }
+    p { color: #687087; line-height: 1.5; }
+
+    label {
+      display: block;
+      margin-top: 18px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-top: 7px;
+      border: 1px solid #d8dbea;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    button {
+      width: 100%;
+      padding: 13px;
+      margin-top: 20px;
+      border: 0;
+      border-radius: 8px;
+      background: #5545df;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:disabled { opacity: 0.6; cursor: wait; }
+
+    .secondary {
+      margin-top: 10px;
+      background: white;
+      color: #5545df;
+      border: 1px solid #d8dbea;
+    }
+
+    #message { overflow-wrap: anywhere; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>📘 AssignHub</h1>
+    <p id="heading">Login</p>
+
+    <form id="authForm">
+      <label for="email">Email Address</label>
+      <input id="email" type="email" required autocomplete="username">
+
+      <label for="password">Password</label>
+      <input id="password" type="password" required
+        minlength="6" autocomplete="current-password">
+
+      <button id="submitButton" type="submit">Login</button>
+    </form>
+
+    <button class="secondary" id="switchButton" type="button">
+      New student? Create an account
+    </button>
+
+    <p id="message" role="status" aria-live="polite"></p>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from
+      "https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js";
+
+    import {
+      getAuth,
+      onAuthStateChanged,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      signOut
+    } from
+      "https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDr5A1oaqPhcHT6Vi-HNsKRd3W9drdNqXA",
+      authDomain: "cloudstudentnotes.firebaseapp.com",
+      projectId: "cloudstudentnotes",
+      storageBucket: "cloudstudentnotes.firebasestorage.app",
+      messagingSenderId: "546772888890",
+      appId: "1:546772888890:web:3ae3519bed8dbb217cf403"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    const TEACHER_EMAIL = "teacher@gmail.com";
+
+    const form = document.getElementById("authForm");
+    const email = document.getElementById("email");
+    const password = document.getElementById("password");
+    const message = document.getElementById("message");
+    const heading = document.getElementById("heading");
+    const submitButton = document.getElementById("submitButton");
+    const switchButton = document.getElementById("switchButton");
+
+    let isSignup = false;
+
+    function redirectByRole(user) {
+      if (!user) return;
+
+      const destination =
+        user.email?.toLowerCase() === TEACHER_EMAIL
+          ? "teacher.html"
+          : "index.html";
+
+      window.location.replace(destination);
+    }
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) redirectByRole(user);
+    });
+
+    switchButton.addEventListener("click", () => {
+      isSignup = !isSignup;
+
+      heading.textContent = isSignup
+        ? "Create  Account"
+        : "Student Login";
+
+      submitButton.textContent = isSignup ? "Sign Up" : "Login";
+
+      switchButton.textContent = isSignup
+        ? "Already registered? Login"
+        : "New student? Create an account";
+
+      password.autocomplete = isSignup
+        ? "new-password"
+        : "current-password";
+
+      message.textContent = "";
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const enteredEmail = email.value.trim().toLowerCase();
+      const enteredPassword = password.value;
+
+      if (isSignup && enteredEmail === TEACHER_EMAIL) {
+        message.textContent =
+          "Teacher accounts cannot be created through student signup.";
+        return;
+      }
+
+      submitButton.disabled = true;
+      switchButton.disabled = true;
+      message.textContent = "Please wait...";
+
+      try {
+        let credential;
+
+        if (isSignup) {
+          credential = await createUserWithEmailAndPassword(
+            auth,
+            enteredEmail,
+            enteredPassword
+          );
+        } else {
+          credential = await signInWithEmailAndPassword(
+            auth,
+            enteredEmail,
+            enteredPassword
+          );
+        }
+
+        redirectByRole(credential.user);
+      } catch (error) {
+        console.error("Authentication error:", error);
+
+        const messages = {
+          "auth/email-already-in-use":
+            "This email is already registered. Please log in.",
+          "auth/invalid-credential":
+            "Email or password is incorrect.",
+          "auth/weak-password":
+            "Choose a password with at least 6 characters.",
+          "auth/invalid-email":
+            "Please enter a valid email address.",
+          "auth/too-many-requests":
+            "Too many attempts. Please wait and try again."
+        };
+
+        message.textContent =
+          messages[error.code] || "Login failed. Please try again.";
+      } finally {
+        submitButton.disabled = false;
+        switchButton.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

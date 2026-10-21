@@ -1,0 +1,172 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Assignment Portal</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">📘 AssignHub</div>
+    <p class="menu-label">WORKSPACE</p>
+    <a class="nav active" href="#dashboard">▦ Dashboard</a>
+    <a class="nav" href="#submit">↑ Submit Assignment</a>
+    <a class="nav" href="#submissions">▤ My Submissions</a>
+    <div class="sidebar-bottom">Cloud Computing Mini Project</div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">STUDENT WORKSPACE</p>
+        <h1>Assignment Dashboard</h1>
+        <p class="muted">Manage and track your academic submissions.</p>
+      </div>
+
+      <div class="topbar-actions">
+        <div class="avatar">S</div>
+        <button type="button" id="logoutButton" class="logout-btn">
+          Logout
+        </button>
+      </div>
+    </header>
+
+    <section class="welcome">
+      <div>
+        <p class="welcome-small">WELCOME TO ASSIGNHUB</p>
+        <h2>Your assignments, organized.</h2>
+        <p>Submit your work and keep track of your progress.</p>
+        <a class="primary-btn" href="#submit">+ Submit Assignment</a>
+      </div>
+      <div class="welcome-icon">📚</div>
+    </section>
+
+    <section id="dashboard" class="stats">
+      <article class="stat-card">
+        <div class="stat-icon purple">▤</div>
+        <p>Total Submissions</p>
+        <h2 id="totalCount">0</h2>
+      </article>
+
+      <article class="stat-card">
+        <div class="stat-icon orange">◷</div>
+        <p>Pending Review</p>
+        <h2 id="pendingCount">0</h2>
+      </article>
+
+      <article class="stat-card">
+        <div class="stat-icon green">✓</div>
+        <p>Reviewed</p>
+        <h2 id="reviewedCount">0</h2>
+      </article>
+    </section>
+
+    <section id="submit" class="panel">
+      <div class="section-heading">
+        <div>
+          <h2>Submit an Assignment</h2>
+          <p class="muted">Fill in the details and select your PDF file.</p>
+        </div>
+      </div>
+
+      <form id="assignmentForm">
+        <div class="form-grid">
+          <div class="field">
+            <label for="studentName">Student Name</label>
+            <input
+              id="studentName"
+              type="text"
+              placeholder="Enter your name"
+              required
+              maxlength="80"
+            >
+          </div>
+
+          <div class="field">
+            <label for="subject">Subject</label>
+            <select id="subject" required>
+              <option value="">Select subject</option>
+              <option>Artificial Intelligence</option>
+              <option>Cloud Computing</option>
+              <option>Computer Networks</option>
+              <option>Database Management Systems</option>
+              <option>Data Mining</option>
+              <option>Internet of Things</option>
+              <option>Other</option>
+            </select>
+          </div>
+
+          <div class="field full">
+            <label for="assignmentTitle">Assignment Title</label>
+            <input
+              id="assignmentTitle"
+              type="text"
+              placeholder="e.g. Cloud Security Case Study"
+              required
+              maxlength="120"
+            >
+          </div>
+
+          <div class="field full">
+            <label for="assignmentFile">Assignment File (PDF, max 5 MB)</label>
+            <input
+              id="assignmentFile"
+              type="file"
+              accept=".pdf,application/pdf"
+              required
+            >
+            <p class="help">
+              Demo mode: file details are checked locally.
+              The actual PDF is not uploaded to a cloud service yet.
+            </p>
+          </div>
+        </div>
+
+        <button class="primary-btn" type="submit">
+          Submit Assignment ↑
+        </button>
+
+        <p id="formMessage" class="message" role="status"></p>
+      </form>
+    </section>
+
+    <section id="submissions" class="panel">
+      <div class="section-heading">
+        <div>
+          <h2>My Submissions</h2>
+          <p class="muted">Your assignment submission history.</p>
+        </div>
+        <span id="recordLabel" class="record-label">0 records</span>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+         <thead>
+<tr>
+<th>Student</th>
+<th>Subject</th>
+<th>Assignment</th>
+<th>File</th>
+<th>Date</th>
+<th>Status</th>
+<th>Teacher Remark</th>
+<th>Action</th>
+</tr>
+</thead>
+          <tbody id="submissionList"></tbody>
+        </table>
+      </div>
+
+      <p id="emptyMessage" class="empty">
+        No assignments submitted yet. Submit your first assignment above.
+      </p>
+    </section>
+
+    <footer>AssignHub · Student Assignment Submission System</footer>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
