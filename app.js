@@ -1,3 +1,4 @@
+
 import {
   auth,
   db,
@@ -17,6 +18,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const UPLOAD_API_URL = "/api/upload";
 
 const assignmentForm = document.getElementById("assignmentForm");
 const studentNameInput = document.getElementById("studentName");
@@ -83,7 +85,9 @@ function updateDashboard(records) {
   ).length;
 
   const reviewed = records.filter(record =>
-    ["approved", "rejected"].includes((record.status || "").toLowerCase())
+    ["approved", "rejected"].includes(
+      (record.status || "").toLowerCase()
+    )
   ).length;
 
   if (pendingCount) pendingCount.textContent = pending;
@@ -91,7 +95,9 @@ function updateDashboard(records) {
 
   if (recordLabel) {
     recordLabel.textContent =
-      records.length === 1 ? "1 submission" : `${records.length} submissions`;
+      records.length === 1
+        ? "1 submission"
+        : `${records.length} submissions`;
   }
 }
 
@@ -147,7 +153,6 @@ async function loadSubmissions() {
   }
 
   try {
-    // Students can load only records belonging to their own Firebase UID.
     const ownSubmissionsQuery = query(
       collection(db, "assignments"),
       where("studentUid", "==", currentUser.uid)
@@ -163,6 +168,7 @@ async function loadSubmissions() {
     records.sort((a, b) => {
       const timeA = a.createdAt?.toMillis?.() ??
         (typeof a.createdAt === "number" ? a.createdAt : 0);
+
       const timeB = b.createdAt?.toMillis?.() ??
         (typeof b.createdAt === "number" ? b.createdAt : 0);
 
@@ -180,7 +186,7 @@ async function loadSubmissions() {
     }
 
     showMessage(
-      "Could not load submissions. Check your Firestore rules and internet connection.",
+      "Could not load submissions. Check Firestore rules and your internet connection.",
       true
     );
   } finally {
@@ -195,7 +201,6 @@ onAuthStateChanged(auth, async user => {
     return;
   }
 
-  // The teacher must use the teacher dashboard.
   if (user.email?.toLowerCase() === "teacher@gmail.com") {
     window.location.replace("teacher.html");
     return;
@@ -229,14 +234,16 @@ if (assignmentForm) {
       return;
     }
 
-    if (file.type !== "application/pdf" &&
-        !file.name.toLowerCase().endsWith(".pdf")) {
+    if (
+      file.type !== "application/pdf" &&
+      !file.name.toLowerCase().endsWith(".pdf")
+    ) {
       showMessage("Please select a PDF file only.", true);
       return;
     }
 
-    if (file.size > MAX_FILE_SIZE) {
-      showMessage("The PDF must be 5 MB or smaller.", true);
+    if (file.size === 0 || file.size > MAX_FILE_SIZE) {
+      showMessage("The PDF must be greater than 0 bytes and 5 MB or smaller.", true);
       return;
     }
 
@@ -244,14 +251,55 @@ if (assignmentForm) {
       'button[type="submit"], input[type="submit"]'
     );
 
+    const originalButtonText = submitButton
+      ? (submitButton.tagName === "BUTTON"
+          ? submitButton.textContent
+          : submitButton.value)
+      : "";
+
     if (submitButton) {
       submitButton.disabled = true;
+
       if (submitButton.tagName === "BUTTON") {
-        submitButton.textContent = "Submitting...";
+        submitButton.textContent = "Uploading PDF...";
+      } else {
+        submitButton.value = "Uploading PDF...";
       }
     }
 
     try {
+      showMessage("Uploading PDF to secure storage...");
+
+      // Refresh/get the current Firebase ID token.
+      const idToken = await currentUser.getIdToken();
+
+      // Upload the actual file bytes to the Azure API.
+      const uploadResponse = await fetch(UPLOAD_API_URL, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+          "x-file-name": file.name,
+          "Content-Type": "application/pdf"
+        },
+        body: file
+      });
+
+      const uploadResult = await uploadResponse.json().catch(() => ({}));
+
+      if (!uploadResponse.ok) {
+        throw new Error(
+          uploadResult.error ||
+          `PDF upload failed (HTTP ${uploadResponse.status}).`
+        );
+      }
+
+      if (!uploadResult.blobName) {
+        throw new Error("The upload API did not return a Blob filename.");
+      }
+
+      showMessage("PDF uploaded. Saving assignment details...");
+
+      // Save metadata only after the PDF upload succeeds.
       await addDoc(collection(db, "assignments"), {
         studentUid: currentUser.uid,
         studentEmail: currentUser.email || "",
@@ -260,7 +308,9 @@ if (assignmentForm) {
         title,
         fileName: file.name,
         fileSize: file.size,
+        blobName: uploadResult.blobName,
         status: "Pending Review",
+        teacherRemark: "",
         createdAt: serverTimestamp(),
         date: new Date().toLocaleDateString("en-IN")
       });
@@ -268,22 +318,27 @@ if (assignmentForm) {
       assignmentForm.reset();
 
       if (studentNameInput) {
-        studentNameInput.value = currentUser.displayName || studentName;
+        studentNameInput.value =
+          currentUser.displayName || studentName;
       }
 
-      showMessage("Assignment details submitted successfully!");
+      showMessage("PDF uploaded and assignment submitted successfully!");
       await loadSubmissions();
     } catch (error) {
       console.error("Submission failed:", error);
+
       showMessage(
-        "Submission failed. Check your Firestore security rules and try again.",
+        error.message || "Submission failed. Please try again.",
         true
       );
     } finally {
       if (submitButton) {
         submitButton.disabled = false;
+
         if (submitButton.tagName === "BUTTON") {
-          submitButton.textContent = "Submit Assignment";
+          submitButton.textContent = originalButtonText || "Submit Assignment";
+        } else {
+          submitButton.value = originalButtonText || "Submit Assignment";
         }
       }
     }
@@ -293,6 +348,7 @@ if (assignmentForm) {
 if (submissionList) {
   submissionList.addEventListener("click", async event => {
     const button = event.target.closest(".delete-submission-btn");
+
     if (!button || !currentUser) return;
 
     const submissionId = button.dataset.id;
@@ -307,16 +363,17 @@ if (submissionList) {
     button.disabled = true;
 
     try {
-      // Firestore rules must also verify that this record belongs to the student.
       await deleteDoc(doc(db, "assignments", submissionId));
       showMessage("Submission deleted successfully.");
       await loadSubmissions();
     } catch (error) {
       console.error("Delete failed:", error);
+
       showMessage(
         "Could not delete this submission. Check your Firestore security rules.",
         true
       );
+
       button.disabled = false;
     }
   });
