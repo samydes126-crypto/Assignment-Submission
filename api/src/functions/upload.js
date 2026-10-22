@@ -1,75 +1,94 @@
 
 const { app } = require("@azure/functions");
 const { BlobServiceClient } = require("@azure/storage-blob");
+const { getFirebaseAdmin } = require("./firebaseAdmin");
 
 app.http("upload", {
-    methods: ["POST"],
-    authLevel: "anonymous",
-    handler: async (request, context) => {
-        try {
-            const connectionString =
-                process.env.BLOB_STORAGE_CONNECTION_STRING;
+  methods: ["POST"],
+  authLevel: "anonymous",
 
-            if (!connectionString) {
-                return {
-                    status: 500,
-                    jsonBody: { error: "Storage configuration is missing." }
-                };
-            }
+  handler: async (request, context) => {
+    try {
+      // Verify the Firebase login token.
+      const authorization = request.headers.get("authorization") || "";
+      const match = authorization.match(/^Bearer (.+)$/i);
 
-            const studentUid = request.headers.get("x-student-uid");
-            const fileName = request.headers.get("x-file-name");
-            const contentType = request.headers.get("content-type");
+      if (!match) {
+        return {
+          status: 401,
+          jsonBody: { error: "Please sign in before uploading." }
+        };
+      }
 
-            if (!studentUid || !fileName || contentType !== "application/pdf") {
-                return {
-                    status: 400,
-                    jsonBody: { error: "Missing student or PDF details." }
-                };
-            }
+      const admin = getFirebaseAdmin();
+      const decodedToken = await admin.auth().verifyIdToken(match[1]);
+      const studentUid = decodedToken.uid;
 
-            const bytes = Buffer.from(await request.arrayBuffer());
+      // Validate PDF details.
+      const fileName = request.headers.get("x-file-name") || "";
+      const contentType = request.headers.get("content-type") || "";
 
-            if (!bytes.length || bytes.length > 5 * 1024 * 1024) {
-                return {
-                    status: 400,
-                    jsonBody: { error: "PDF must be between 1 byte and 5 MB." }
-                };
-            }
+      if (
+        !fileName.toLowerCase().endsWith(".pdf") ||
+        contentType.split(";")[0].trim() !== "application/pdf"
+      ) {
+        return {
+          status: 400,
+          jsonBody: { error: "Please upload a PDF file." }
+        };
+      }
 
-            const service = BlobServiceClient.fromConnectionString(
-                connectionString
-            );
+      const bytes = Buffer.from(await request.arrayBuffer());
 
-            const container = service.getContainerClient("assignments");
-            await container.createIfNotExists();
+      if (bytes.length === 0 || bytes.length > 5 * 1024 * 1024) {
+        return {
+          status: 400,
+          jsonBody: { error: "PDF must be between 1 byte and 5 MB." }
+        };
+      }
 
-            const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
-            const blobName =
-                `${studentUid}/${Date.now()}-${safeName}`;
+      // Connect to the private Azure Blob container.
+      const connectionString =
+        process.env.BLOB_STORAGE_CONNECTION_STRING;
 
-            const blob = container.getBlockBlobClient(blobName);
+      if (!connectionString) {
+        return {
+          status: 500,
+          jsonBody: { error: "Storage configuration is missing." }
+        };
+      }
 
-            await blob.uploadData(bytes, {
-                blobHTTPHeaders: {
-                    blobContentType: "application/pdf",
-                    blobContentDisposition: "inline"
-                }
-            });
+      const service =
+        BlobServiceClient.fromConnectionString(connectionString);
 
-            return {
-                status: 200,
-                jsonBody: {
-                    message: "PDF uploaded successfully.",
-                    blobName
-                }
-            };
-        } catch (error) {
-            context.error("PDF upload failed.", error);
-            return {
-                status: 500,
-                jsonBody: { error: "PDF upload failed." }
-            };
+      const container = service.getContainerClient("assignments");
+      await container.createIfNotExists();
+
+      const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const blobName = `${studentUid}/${Date.now()}-${safeName}`;
+      const blob = container.getBlockBlobClient(blobName);
+
+      await blob.uploadData(bytes, {
+        blobHTTPHeaders: {
+          blobContentType: "application/pdf",
+          blobContentDisposition: "inline"
         }
+      });
+
+      return {
+        status: 200,
+        jsonBody: {
+          message: "PDF uploaded successfully.",
+          blobName
+        }
+      };
+    } catch (error) {
+      context.error("PDF upload failed.", error);
+
+      return {
+        status: 500,
+        jsonBody: { error: "Upload failed. Check the API configuration." }
+      };
     }
+  }
 });
