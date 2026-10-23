@@ -1,10 +1,10 @@
-
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Student Assignment Portal</title>
+  <title>AssignHub | Student Dashboard</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -24,7 +24,6 @@
         <h1>Assignment Dashboard</h1>
         <p class="muted">Manage and track your academic submissions.</p>
       </div>
-
       <div class="topbar-actions">
         <div class="avatar">S</div>
         <button type="button" id="logoutButton" class="logout-btn">
@@ -49,13 +48,11 @@
         <p>Total Submissions</p>
         <h2 id="totalCount">0</h2>
       </article>
-
       <article class="stat-card">
         <div class="stat-icon orange">◷</div>
         <p>Pending Review</p>
         <h2 id="pendingCount">0</h2>
       </article>
-
       <article class="stat-card">
         <div class="stat-icon green">✓</div>
         <p>Reviewed</p>
@@ -67,7 +64,7 @@
       <div class="section-heading">
         <div>
           <h2>Submit an Assignment</h2>
-          <p class="muted">Fill in the details and select your PDF file.</p>
+          <p class="muted">Enter your details and upload your PDF.</p>
         </div>
       </div>
 
@@ -75,13 +72,8 @@
         <div class="form-grid">
           <div class="field">
             <label for="studentName">Student Name</label>
-            <input
-              id="studentName"
-              type="text"
-              placeholder="Enter your name"
-              required
-              maxlength="80"
-            >
+            <input id="studentName" type="text"
+              placeholder="Enter your name" required maxlength="80">
           </div>
 
           <div class="field">
@@ -100,26 +92,18 @@
 
           <div class="field full">
             <label for="assignmentTitle">Assignment Title</label>
-            <input
-              id="assignmentTitle"
-              type="text"
+            <input id="assignmentTitle" type="text"
               placeholder="e.g. Cloud Security Case Study"
-              required
-              maxlength="120"
-            >
+              required maxlength="120">
           </div>
 
           <div class="field full">
-            <label for="assignmentFile">Assignment File (PDF, max 5 MB)</label>
-            <input
-              id="assignmentFile"
-              type="file"
-              accept=".pdf,application/pdf"
-              required
-            >
+            <label for="assignmentFile">Assignment File (PDF, maximum 5 MB)</label>
+            <input id="assignmentFile" type="file"
+              accept=".pdf,application/pdf" required>
             <p class="help">
-              Demo mode: file details are checked locally.
-              The actual PDF is not uploaded to a cloud service yet.
+              Select your assignment PDF. The application is designed to
+              store the file in private Azure Blob Storage.
             </p>
           </div>
         </div>
@@ -127,8 +111,7 @@
         <button class="primary-btn" type="submit">
           Submit Assignment ↑
         </button>
-
-        <p id="formMessage" class="message" role="status"></p>
+        <p id="formMessage" class="message" role="status" aria-live="polite"></p>
       </form>
     </section>
 
@@ -136,25 +119,25 @@
       <div class="section-heading">
         <div>
           <h2>My Submissions</h2>
-          <p class="muted">Your assignment submission history.</p>
+          <p class="muted">View your assignment history and review status.</p>
         </div>
         <span id="recordLabel" class="record-label">0 records</span>
       </div>
 
       <div class="table-wrap">
         <table>
-         <thead>
-<tr>
-<th>Student</th>
-<th>Subject</th>
-<th>Assignment</th>
-<th>File</th>
-<th>Date</th>
-<th>Status</th>
-<th>Teacher Remark</th>
-<th>Action</th>
-</tr>
-</thead>
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Subject</th>
+              <th>Assignment</th>
+              <th>File</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Teacher Remark</th>
+              <th>Action</th>
+            </tr>
+          </thead>
           <tbody id="submissionList"></tbody>
         </table>
       </div>
@@ -170,3 +153,4 @@
   <script type="module" src="app.js"></script>
 </body>
 </html>
+```

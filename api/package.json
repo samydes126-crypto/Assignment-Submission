@@ -11,5 +11,5 @@
     "@azure/storage-blob": "^12.34.0",
     "firebase-admin": "^14.5.0"
   },
- "main": "src/functions/*.js"
+ "main": "src/index.js"
 }
