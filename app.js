@@ -286,12 +286,7 @@ if (assignmentForm) {
 
       const uploadResult = await uploadResponse.json().catch(() => ({}));
 
-      if (!uploadResponse.ok) {
-        throw new Error(
-          uploadResult.error ||
-          `PDF upload failed (HTTP ${uploadResponse.status}).`
-        );
-      }
+      
 
       if (!uploadResult.blobName) {
         throw new Error("The upload API did not return a Blob filename.");
